@@ -1,0 +1,1 @@
+web: gunicorn taomanagementsystem.wsgi --log-file -

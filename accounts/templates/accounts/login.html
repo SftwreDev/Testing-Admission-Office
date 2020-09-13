@@ -1,0 +1,46 @@
+{% extends "baseTemplate.html" %}
+
+{% block content %}
+
+    <div class="container">
+        <div class="row" style="margin-top: 3rem;">
+            
+            <div class="col s2"></div>
+            <div class="col s8">
+                <div class="row">
+                    
+                      <div class="card darken-1">
+                        <div class="card-content white-text">
+                          <span class="card-title black-text">Login</span>
+                          <div class="row">
+                          <form method="POST">
+                            {% csrf_token %}
+                            <div class="input-field col s12">
+                              <input id="email" type="email" class="validate">
+                              <label for="email">Email</label>
+                            </div>
+
+                            <div class="input-field col s12">
+                                <input id="password" type="password" class="validate">
+                                <label for="password">Password</label>
+                            </div>
+
+                          </div>
+                        </div>
+                        <div class="card-action">
+                            <button class="btn waves-effect waves-light blue darken-1 " type="submit" >Login
+                                <i class="material-icons right">send</i>
+                            </button>
+                        </div>
+                      </form>
+                      </div>
+                   
+                  </div>
+            </div>
+            <div class="col s2"></div>
+          </div>
+    </div>
+
+
+{% endblock  %}
+    

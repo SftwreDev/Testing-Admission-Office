@@ -1,0 +1,14 @@
+{% if user.is_authenticated %}
+<ul id="slide-out" class="sidenav">
+    <li style="margin-top: 8rem;">Welcome {{ user.username }}</li>
+    <li><div class="divider"></div></li>
+    <li><a href="{% url 'home' %}"><i class="material-icons left">home</i>Home</a></li>
+    <li><a href="#!"><i class="material-icons left">dashboard</i>Dashboard</a></li>
+    <li><a href="{% url 'documents:list_of_files' %}"><i class="material-icons left">folder</i>Documents</a></li>
+    <li><a href="#!"><i class="material-icons left">person</i>Profile</a></li>
+    <li><div class="divider"></div></li>
+    <li><a class="subheader">Subheader</a></li>
+    <li><a class="waves-effect" href="#!">About</a></li>
+</ul>
+<a href="#" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+{% endif %}  
