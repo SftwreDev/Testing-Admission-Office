@@ -40,8 +40,10 @@ INSTALLED_APPS = [
 
     'accounts',
     'repository',
+    'students',
     'widget_tweaks',
-     'crispy_forms',
+    'crispy_forms',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -134,7 +136,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
-
+LOGIN_URL = 'login'
 
 import dj_database_url
 db_for_heroku = dj_database_url.config(conn_max_age=600)

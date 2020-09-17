@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect,get_object_or_404
+from django.contrib.auth.decorators import login_required
 
 from django.views.generic import ListView
 from .models import FileUpload
 from .forms import FileUploadForm
 
-
+@login_required
 def FileList(request):
     template_name = 'repository/file_list.html'
     files = FileUpload.objects.all()
