@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-sm-12 col-md-12 col-lg-12">
+      <div class="card shadow">
+        <div class="card-header">
+          Update Form
+        </div>
+        <div class="card-body">
+          <form method="POST">
+            {% csrf_token %}
+            {{update_form|crispy}}
+            <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content  %}
+
+
+

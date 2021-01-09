@@ -1,14 +1,22 @@
-{% if user.is_authenticated %}
-<ul id="slide-out" class="sidenav">
-    <li style="margin-top: 8rem;">Welcome {{ user.username }}</li>
-    <li><div class="divider"></div></li>
-    <li><a href="{% url 'home' %}"><i class="material-icons left">home</i>Home</a></li>
-    <li><a href="#!"><i class="material-icons left">dashboard</i>Dashboard</a></li>
-    <li><a href="{% url 'documents:list_of_files' %}"><i class="material-icons left">folder</i>Documents</a></li>
-    <li><a href="#!"><i class="material-icons left">person</i>Profile</a></li>
-    <li><div class="divider"></div></li>
-    <li><a class="subheader">Subheader</a></li>
-    <li><a class="waves-effect" href="#!">About</a></li>
+<nav id="sidebar" class="active">
+    <!-- <h1><a href="index.html" class="logo text-center"><i class="fas fa-user-md"></i></a></h1> -->
+<ul class="list-unstyled components mb-5" style="margin-top: 5rem;">
+<li class="active">
+    <a href="{% url 'home' %}"><span class="fa fa-home"></span> Home</a>
+</li>
+<li>
+    <a href="{% url 'students:student_profile' %}"><span class="fa fa-user"></span> Students </a>
+</li>
+<li>
+    <a href="{% url 'documents:office_file_list' %}"><span class="fas fa-file"></span>Office Documents</a>
+</li>
+<li>
+    <a href="{% url 'students:settings' %}"><span class="fa fa-cogs"></span> Settings</a>
+</li>
+
 </ul>
-<a href="#" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">menu</i></a>
-{% endif %}  
+
+<div class="footer">
+    
+</div>
+</nav>

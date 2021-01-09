@@ -25,8 +25,8 @@ SECRET_KEY = 'sq76tb)nwkm+ptfn$ch)m1u@o0(s$ykkw$a+_=!10i!fi!-#+&'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = ['testing-admission-office.herokuapp.com']
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['testing-admission-office.herokuapp.com', '*']
+# ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -40,10 +40,12 @@ INSTALLED_APPS = [
 
     'accounts',
     'repository',
+    'students',
     'widget_tweaks',
-     'crispy_forms',
+    'crispy_forms',
+    'django_filters',
 ]
-
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     
@@ -134,7 +136,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
-
+LOGIN_URL = 'login'
 
 import dj_database_url
 db_for_heroku = dj_database_url.config(conn_max_age=600)

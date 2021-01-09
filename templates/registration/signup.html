@@ -1,45 +1,25 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
 {% load widget_tweaks %}
 
 {% block content %}
-{% include "navbar.html" %}
-    <div class="container">
-        <div class="row" style="margin-top: 3rem;">
-            
-            <div class="col s2"></div>
-            <div class="col s8">
-                <div class="row">
-                    
-                      <div class="card darken-1">
-                        <div class="card-content white-text">
-                          <span class="card-title black-text">Register here</span>
-                          <br>
-                          <div class="row black-text">
-                          <form method="POST">
-                            {% csrf_token %}
-                            {% render_field form.username.label  %}
-                            {% render_field form.username %}
-                            <br>
-                            {% render_field form.password1.label  %}
-                            {% render_field form.password1 %}
-                            <br>
-                            {% render_field form.password2.label  %}
-                            {% render_field form.password2 %}
-                          </div>
-                        </div>
-                        <div class="card-action">
-                            <button class="btn waves-effect waves-light blue darken-1 " type="submit" >Sign up
-                                <i class="material-icons right">send</i>
-                            </button>
-                        </div>
-                      </form>
-                      </div>
-                   
-                  </div>
-            </div>
-            <div class="col s2"></div>
-          </div>
+<div class="container-fluid mt-5">
+  <div class="row">
+    <div class="col-sm-3 col-md-3 col-lg-3"></div>
+    <div class="col-sm-6 col-md-6 col-lg-6">
+      <div class="card">
+        <div class="card-header">Create your own account</div>
+        <div class="card-body">
+          <form method="POST">
+            {% csrf_token %}
+            {{form|crispy}}
+            <button class="btn btn-primary">Sign up</button>
+          </form>
+        </div>
+      </div>
     </div>
-
-
-{% endblock  %}
+    <div class="col-sm-3 col-md-3 col-lg-3"></div>
+  </div>
+</div>
+{% endblock content %}
+    

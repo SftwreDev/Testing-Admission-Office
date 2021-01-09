@@ -1,0 +1,241 @@
+DECLARE @DateFrom DATE;
+                        DECLARE @DateTo DATE;
+                        DECLARE @Shift NVARCHAR(10);
+                        DECLARE @Plant NVARCHAR(20);
+                        DECLARE @LineId NVARCHAR(50);
+
+                        SET @DateFrom = CAST('2020-09-1' AS DATE);
+                        SET @DateTo = CAST(DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,'2020-09-01')+1,0)) AS DATE);
+
+                        SET @Shift = '1R';
+                        SET @Plant = 'BP 100';
+                        SET @LineId = '{lineid}';
+
+
+                        SELECT
+                        db2_.Model, db2_.TotalInspections
+
+                        , db2_.PASS_TOTAL, db2_.PASS_MIN, db2_.PASS_MAX, db2_.PASS_COUNT, db2_.PASS_AVERAGE
+                        , CASE WHEN db2_.PASS_VARIANCE = '' THEN
+                            ''
+                        ELSE
+
+                            CASE WHEN (db2_.PASS_VARIANCE)/3600=0 THEN ''
+                            ELSE RIGHT('00'+CAST(db2_.PASS_VARIANCE/3600 AS nvarchar),2) + ':' END
+
+                            + RIGHT('00'+CAST(db2_.PASS_VARIANCE/60 AS nvarchar),2) + ':'
+
+                            + RIGHT('00'+CAST(db2_.PASS_VARIANCE%60 AS nvarchar),2)
+
+                        END	AS PASS_VARIANCE_
+
+
+
+                        , db2_.FAIL_TOTAL, db2_.FAIL_MIN, db2_.FAIL_MAX, db2_.FAIL_COUNT, db2_.FAIL_AVERAGE
+                        , CASE WHEN db2_.FAIL_VARIANCE = '' THEN
+                            ''
+                        ELSE
+
+                            CASE WHEN (db2_.FAIL_VARIANCE)/3600=0 THEN ''
+                            ELSE RIGHT('00'+CAST(db2_.FAIL_VARIANCE/3600 AS nvarchar),2) + ':' END
+
+                            + RIGHT('00'+CAST(db2_.FAIL_VARIANCE/60 AS nvarchar),2) + ':'
+
+                            + RIGHT('00'+CAST(db2_.FAIL_VARIANCE%60 AS nvarchar),2)
+
+                        END	AS FAIL_VARIANCE_, db2_.TotalRevised, db2_.TotalFinal
+
+
+
+                        FROM (
+
+                SELECT *
+                , CASE WHEN PASS_SUMTIME IS NULL THEN
+                    ''
+                ELSE
+
+                    CASE WHEN (PASS_SUMTIME/PASS_COUNT)/3600=0 THEN ''
+                    ELSE RIGHT('00'+CAST((PASS_SUMTIME/PASS_COUNT)/3600 AS nvarchar),2) + ':' END
+
+                    + RIGHT('00'+CAST((PASS_SUMTIME/PASS_COUNT)/60 AS nvarchar),2) + ':'
+
+                    + RIGHT('00'+CAST((PASS_SUMTIME/PASS_COUNT)%60 AS nvarchar),2)
+
+                END	AS PASS_AVERAGE
+
+                ,
+                CASE WHEN PASS_MAX IS NULL OR PASS_MAX='' THEN ''
+                ELSE
+                --CAST(DATEDIFF(MINUTE, CAST(PASS_MAX AS time), CAST(PASS_MIN AS time)) AS nvarchar)
+                CAST(
+                DATEDIFF(SECOND,
+                    CASE WHEN LEN(PASS_MAX)=5 THEN
+                        CAST('00:' + PASS_MAX AS time)
+                    ELSE
+                        CAST(PASS_MAX AS time)
+                    END
+                    ,
+                    CASE WHEN LEN(PASS_MIN)=5 THEN
+                        CAST('00:' + PASS_MIN AS time)
+                    ELSE
+                        CAST(PASS_MIN AS time)
+                    END
+                )AS nvarchar)
+
+                END AS PASS_VARIANCE
+
+
+
+
+
+                , CASE WHEN FAIL_SUMTIME IS NULL THEN
+                    ''
+                ELSE
+
+                    CASE WHEN (FAIL_SUMTIME/FAIL_COUNT)/3600=0 THEN ''
+                    ELSE RIGHT('00'+CAST((FAIL_SUMTIME/FAIL_COUNT)/3600 AS nvarchar),2) + ':' END
+
+                    + RIGHT('00'+CAST((FAIL_SUMTIME/FAIL_COUNT)/60 AS nvarchar),2) + ':'
+
+                    + RIGHT('00'+CAST((FAIL_SUMTIME/FAIL_COUNT)%60 AS nvarchar),2)
+
+                END	AS FAIL_AVERAGE
+
+                ,
+                CASE WHEN FAIL_MAX IS NULL OR FAIL_MAX='' THEN ''
+                ELSE
+                --CAST(DATEDIFF(MINUTE, CAST(PASS_MAX AS time), CAST(PASS_MIN AS time)) AS nvarchar)
+                CAST(
+                DATEDIFF(SECOND,
+                    CASE WHEN LEN(FAIL_MAX)=5 THEN
+                        CAST('00:' + FAIL_MAX AS time)
+                    ELSE
+                        CAST(FAIL_MAX AS time)
+                    END
+                    ,
+                    CASE WHEN LEN(FAIL_MIN)=5 THEN
+                        CAST('00:' + FAIL_MIN AS time)
+                    ELSE
+                        CAST(FAIL_MIN AS time)
+                    END
+                )AS nvarchar)
+
+                END AS FAIL_VARIANCE
+
+
+
+
+
+                FROM (
+
+                    SELECT r1.Model
+                    , COUNT(r1.Model) AS TotalInspections
+
+                    --==============================================================================================================================================PASS
+
+                    , (SELECT COUNT(*)
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and  r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND UPPER(QAResult)='PASS' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='PASS' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS PASS_TOTAL
+
+                    , (SELECT
+                    CASE WHEN DATEPART(HOUR, MAX(r11.Duration))=0 THEN '' ELSE RIGHT('00'+CAST(DATEPART(HOUR, MAX(r11.Duration)) AS nvarchar),2) + ':' END +
+                    RIGHT('00'+CAST(DATEPART(MINUTE, MAX(r11.Duration)) AS nvarchar),2) + ':' + RIGHT('00'+CAST(DATEPART(SECOND, MAX(r11.Duration)) AS nvarchar),2)
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and  r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND UPPER(QAResult)='PASS' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='PASS' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS PASS_MIN
+
+
+                    , (SELECT
+                    CASE WHEN DATEPART(HOUR, MIN(r11.Duration))=0 THEN '' ELSE RIGHT('00'+CAST(DATEPART(HOUR, MIN(r11.Duration)) AS nvarchar),2) + ':' END +
+                    RIGHT('00'+CAST(DATEPART(MINUTE, MIN(r11.Duration)) AS nvarchar),2) + ':' + RIGHT('00'+CAST(DATEPART(SECOND, MIN(r11.Duration)) AS nvarchar),2)
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and  r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND UPPER(QAResult)='PASS' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='PASS' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS PASS_MAX
+
+                    , (SELECT COUNT(*)
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and  r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND UPPER(QAResult)='PASS' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='PASS' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS PASS_COUNT
+
+                    , (SELECT SUM(DATEPART(SECOND, r11.Duration)
+                        + 60 * DATEPART(MINUTE, r11.Duration)
+                        + 3600 * DATEPART(HOUR, r11.Duration)
+                        )
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and  r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND UPPER(QAResult)='PASS' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='PASS' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS PASS_SUMTIME
+
+
+                    --==============================================================================================================================================FAIL
+
+
+                    , (SELECT COUNT(*)
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and  r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS FAIL_TOTAL
+
+                    , (SELECT
+                    CASE WHEN DATEPART(HOUR, MAX(r11.Duration))=0 THEN '' ELSE RIGHT('00'+CAST(DATEPART(HOUR, MAX(r11.Duration)) AS nvarchar),2) + ':' END +
+                    RIGHT('00'+CAST(DATEPART(MINUTE, MAX(r11.Duration)) AS nvarchar),2) + ':' + RIGHT('00'+CAST(DATEPART(SECOND, MAX(r11.Duration)) AS nvarchar),2)
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and  r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS FAIL_MIN
+
+
+                    , (SELECT
+                    CASE WHEN DATEPART(HOUR, MIN(r11.Duration))=0 THEN '' ELSE RIGHT('00'+CAST(DATEPART(HOUR, MIN(r11.Duration)) AS nvarchar),2) + ':' END +
+                    RIGHT('00'+CAST(DATEPART(MINUTE, MIN(r11.Duration)) AS nvarchar),2) + ':' + RIGHT('00'+CAST(DATEPART(SECOND, MIN(r11.Duration)) AS nvarchar),2)
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and  r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS FAIL_MAX
+
+                    , (SELECT COUNT(*)
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and  r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS FAIL_COUNT
+
+                    , (SELECT SUM(DATEPART(SECOND, r11.Duration)
+                        + 60 * DATEPART(MINUTE, r11.Duration)
+                        + 3600 * DATEPART(HOUR, r11.Duration)
+                        )
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS FAIL_SUMTIME
+                    
+                    , (SELECT COUNT(*)
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and  r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND LEFT(r11.RecordType, 1) = 'R'
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS TotalRevised
+
+					, (SELECT COUNT(*)
+                    FROM RecordSummary AS r11
+                    WHERE (r11.isdelete=0 OR r11.isdelete IS NULL) and  r11.Model=r1.Model AND (CAST(r11.RunDate AS DATE) BETWEEN @DateFrom AND @DateTo) AND r11.Shift=@Shift AND r11.Plant=@Plant AND LEFT(r11.RecordType, 1) = 'F'
+                    --WHERE r11.Model=r1.Model AND CAST(r11.RunDate AS DATE) BETWEEN CAST('10/1/2020' AS DATE) AND CAST('10/31/2020' AS DATE) AND UPPER(QAResult)='FAIL' AND LEFT(r11.RecordType, 1) IN ('R', 'F')
+                    ) AS TotalFinal
+
+
+                    FROM RecordSummary AS r1
+                    WHERE (isdelete=0 OR isdelete IS NULL)
+                    AND CONVERT(VARCHAR(7), Rundate, 120) = convert(VARCHAR(7), '2020-09', 20)
+                    AND LEFT(r1.RecordType, 1) IN ('R', 'F')
+                    AND r1.Shift= '1R'
+                    AND r1.Plant= 'BP 100'
+                    GROUP BY r1.Model
+
+
+                ) AS db1_
+
+            ) AS db2_
+
